@@ -10,12 +10,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 create_mysql_user ()
 {
-  echo $FUNCNAME
+  # TODO: Check if user exists.
+  SQL="CREATE USER '$1'@'%' IDENTIFIED BY '$2';"
+  mysql -u$ADMIN_MYSQL_USER -p$ADMIN_MYSQL_PASSWORD -h$MYSQL_HOSTNAME -e "$SQL"
 }
 
 create_mysql_password ()
 {
-  echo $FUNCNAME
+  cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1
 }
 
 reload_mysql_tables ()
@@ -25,7 +27,9 @@ reload_mysql_tables ()
 
 create_mysql_database ()
 {
-  echo $FUNCNAME
+  # TODO: Check if DB exists.
+  SQL="CREATE DATABASE $1"
+  mysql -u$ADMIN_MYSQL_USER -p$ADMIN_MYSQL_PASSWORD -h$MYSQL_HOSTNAME -e "$SQL"
 }
 
 give_mysql_access ()
@@ -53,9 +57,9 @@ case "$1" in
   mysql:create)
   if [ $2 ]; then
     echo "Creating database for '$2' container."
-    create_mysql_user
-    create_mysql_password
-    create_mysql_database
+    PASSWORD=$(create_mysql_password)
+    create_mysql_user "$2" "$PASSWORD"
+    create_mysql_database "$2"
     give_mysql_access
     reload_mysql_tables
     link_environment_variables
