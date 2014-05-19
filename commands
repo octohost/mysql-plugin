@@ -1,0 +1,82 @@
+#!/bin/bash
+
+if [ -f /etc/default/octohost ]; then
+        . /etc/default/octohost
+fi
+
+. ./env
+
+create_mysql_user ()
+{
+  echo $FUNCNAME
+}
+
+create_mysql_password ()
+{
+  echo $FUNCNAME
+}
+
+reload_mysql_tables ()
+{
+  echo $FUNCNAME
+}
+
+create_mysql_database ()
+{
+  echo $FUNCNAME
+}
+
+give_mysql_access ()
+{
+  echo $FUNCNAME
+}
+
+reload_mysql_tables ()
+{
+  echo $FUNCNAME
+}
+
+link_environment_variables ()
+{
+  echo $FUNCNAME
+}
+
+show_environment_variables ()
+{
+  echo $FUNCNAME
+}
+
+case "$1" in
+
+  mysql:create)
+  if [ $2 ]; then
+    echo "Creating database for '$2' container."
+    create_mysql_user
+    create_mysql_password
+    create_mysql_database
+    give_mysql_access
+    reload_mysql_tables
+    link_environment_variables
+    show_environment_variables
+    echo "octo reload $2"
+  else
+    echo "Usage: octo mysql create {container}"
+  fi
+  ;;
+
+  mysql:delete)
+
+  ;;
+
+  help)
+  cat<<EOF
+
+  octo mysql:create {container}
+  octo mysql:delete {container}
+
+EOF
+  ;;
+
+  *)
+  ;;
+esac
