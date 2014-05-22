@@ -52,9 +52,17 @@ show_environment_variables ()
   echo $FUNCNAME
 }
 
+config_check () {
+  if [ -z "$MYSQL_HOSTNAME" ]; then
+    echo "MYSQL_HOSTNAME needs to be set in $DIR/env."
+    exit 1
+  fi
+}
+
 case "$1" in
 
   mysql:create)
+  config_check
   if [ $2 ]; then
     echo "Creating database for '$2' container."
     PASSWORD=$(create_mysql_password)
@@ -71,7 +79,7 @@ case "$1" in
   ;;
 
   mysql:delete)
-
+  config_check
   ;;
 
   help)
@@ -79,7 +87,6 @@ case "$1" in
 
   octo mysql:create {container}
   octo mysql:delete {container}
-
 EOF
   ;;
 
