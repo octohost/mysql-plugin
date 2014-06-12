@@ -64,14 +64,33 @@ config_check () {
   fi
 }
 
+drop_mysql_database ()
+{
+  SQL="DROP DATABASE $1"
+  run_mysql_command "$SQL"
+}
+
+drop_mysqL_user ()
+{
+  SQL="DROP USER $1"
+  run_mysql_command "$SQL"
+}
+
+remove_environment_variables ()
+{
+  /usr/bin/octo config:rm $1/MYSQL_USERNAME
+  /usr/bin/octo config:rm $1/MYSQL_PASSWORD
+  /usr/bin/octo config:rm $1/MYSQL_DATABASE
+  /usr/bin/octo config:rm $1/MYSQL_HOSTNAME
+}
+
 case "$1" in
 
   mysql:create)
   config_check
   if [ $2 ]; then
     USER="$2"
-    CONTAINER="$2"
-    echo "Creating user and database for '$CONTAINER' container."
+    echo "Creating user and database for '$USER' container."
     PASSWORD=$(create_mysql_password)
     create_mysql_user "$USER" "$PASSWORD"
     create_mysql_database "$USER"
@@ -79,7 +98,7 @@ case "$1" in
     reload_mysql_tables
     link_environment_variables "$USER" "$PASSWORD"
     show_environment_variables "$USER"
-    echo "TO BE ADDED: octo reload $2"
+    echo "TO BE ADDED: octo reload $USER"
   else
     echo "Usage: octo mysql create {container}"
   fi
@@ -87,6 +106,16 @@ case "$1" in
 
   mysql:delete)
   config_check
+  if [ $2 ]; then
+    USER="$2"
+    drop_mysql_database "$USER"
+    drop_mysqL_user "$USER"
+    reload_mysql_tables
+    remove_environment_variables "$USER"
+    echo "TO BE ADDED: octo reload $USER"
+  else
+    echo "Usage: octo mysql delete {container}"
+  fi
   ;;
 
   help)
