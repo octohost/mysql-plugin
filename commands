@@ -1,18 +1,23 @@
 #!/bin/bash
 
 if [ -f /etc/default/octohost ]; then
-        . /etc/default/octohost
+  . /etc/default/octohost
 fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 . $DIR/env
 
+run_mysql_command ()
+{
+  mysql -u$ADMIN_MYSQL_USER -p$ADMIN_MYSQL_PASSWORD -h$MYSQL_HOSTNAME -e "$1"
+}
+
 create_mysql_user ()
 {
   # TODO: Check if user exists.
   SQL="CREATE USER '$1'@'%' IDENTIFIED BY '$2';"
-  mysql -u$ADMIN_MYSQL_USER -p$ADMIN_MYSQL_PASSWORD -h$MYSQL_HOSTNAME -e "$SQL"
+  run_mysql_command "$SQL"
 }
 
 create_mysql_password ()
@@ -22,34 +27,34 @@ create_mysql_password ()
 
 reload_mysql_tables ()
 {
-  echo $FUNCNAME
+  SQL="FLUSH PRIVILEGES;"
+  run_mysql_command "$SQL"
 }
 
 create_mysql_database ()
 {
   # TODO: Check if DB exists.
   SQL="CREATE DATABASE $1"
-  mysql -u$ADMIN_MYSQL_USER -p$ADMIN_MYSQL_PASSWORD -h$MYSQL_HOSTNAME -e "$SQL"
+  run_mysql_command "$SQL"
 }
 
 give_mysql_access ()
 {
-  echo $FUNCNAME
-}
-
-reload_mysql_tables ()
-{
-  echo $FUNCNAME
+  SQL="GRANT ALL PRIVILEGES ON $1.* To '$1'@'%' IDENTIFIED BY '$2';"
+  run_mysql_command "$SQL"
 }
 
 link_environment_variables ()
 {
-  echo $FUNCNAME
+  /usr/bin/octo config:set $1/MYSQL_USERNAME "$1" > /dev/null
+  /usr/bin/octo config:set $1/MYSQL_PASSWORD "$2" > /dev/null
+  /usr/bin/octo config:set $1/MYSQL_DATABASE "$1" > /dev/null
+  /usr/bin/octo config:set $1/MYSQL_HOSTNAME "$MYSQL_HOSTNAME" > /dev/null
 }
 
 show_environment_variables ()
 {
-  echo $FUNCNAME
+  octo config $1
 }
 
 config_check () {
@@ -64,15 +69,17 @@ case "$1" in
   mysql:create)
   config_check
   if [ $2 ]; then
-    echo "Creating database for '$2' container."
+    USER="$2"
+    CONTAINER="$2"
+    echo "Creating user and database for '$CONTAINER' container."
     PASSWORD=$(create_mysql_password)
-    create_mysql_user "$2" "$PASSWORD"
-    create_mysql_database "$2"
-    give_mysql_access
+    create_mysql_user "$USER" "$PASSWORD"
+    create_mysql_database "$USER"
+    give_mysql_access "$USER" "$PASSWORD"
     reload_mysql_tables
-    link_environment_variables
-    show_environment_variables
-    echo "octo reload $2"
+    link_environment_variables "$USER" "$PASSWORD"
+    show_environment_variables "$USER"
+    echo "TO BE ADDED: octo reload $2"
   else
     echo "Usage: octo mysql create {container}"
   fi
