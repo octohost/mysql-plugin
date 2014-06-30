@@ -123,8 +123,8 @@ case "$1" in
   help)
   cat<<EOF
 
-  octo mysql:create {container}
-  octo mysql:delete {container}
+  octo mysql:create {container}            Create MySQL user and database and link environment variables to {container}
+  octo mysql:delete {container}            Delete MySQL user and database and link environment variables to {container}
 EOF
   ;;
 
