@@ -86,6 +86,16 @@ remove_environment_variables ()
   /usr/bin/octo config:rm $1/MYSQL_HOSTNAME
 }
 
+reload_container ()
+{
+  # Only reload the container if it's already running.
+  BASE="$1"
+  FOUND=$(sudo docker ps | grep "$BUILD_ORG_NAME/$BASE")
+  if [ $? = 0 ]; then
+    /usr/bin/octo reload $BASE
+  fi
+}
+
 case "$1" in
 
   mysql:create)
@@ -100,7 +110,7 @@ case "$1" in
     reload_mysql_tables
     link_environment_variables "$USER" "$PASSWORD"
     show_environment_variables "$USER"
-    octo reload $USER
+    reload_container "$USER"
   else
     echo "Usage: octo mysql create {container}"
   fi
@@ -114,7 +124,7 @@ case "$1" in
     drop_mysqL_user "$USER"
     reload_mysql_tables
     remove_environment_variables "$USER"
-    octo reload $USER
+    reload_container "$USER"
   else
     echo "Usage: octo mysql delete {container}"
   fi
